@@ -16,10 +16,34 @@ class EventManager(FileSystemEventHandler):
                 print(f"Ignoring file: {event.src_path}")
     def move_file(self,source,destination):
         time.sleep(3)
+        if not os.path.exists(source):
+            print(f"Source file does not exist: {source}")
+            return
+        if not os.path.exists(destination):
+            print(f"Destination folder does not exist: {destination}")
+            return
         name_file = os.path.basename(source)
         destination_path = os.path.join(destination, name_file)
-        shutil.move(source, destination_path)
-        print(f"Moved file : {name_file} to {destination_path}")
+        final_destination = self.find_available_name(destination_path)
+        try:
+            shutil.move(source, final_destination)
+            print(f"Moved file : {name_file} to {final_destination}")
+        except Exception as e:
+            print(f"Error moving file {name_file}: {e}")
+    def find_available_name(self,destination_path):
+        if not os.path.exists(destination_path):
+            return destination_path
+        folder = os.path.dirname(destination_path)
+        full_name = os.path.basename(destination_path)
+        name_base,extend = os.path.splitext(full_name)
+
+        index = 1
+        while True:
+            new_name = f"{name_base}({index}){extend}"
+            new_path = os.path.join(folder, new_name)
+            if not os.path.exists(new_path):
+                return new_path
+            index += 1
 
 
 print("=== Starting file watcher ===")

@@ -6,14 +6,22 @@ from watchdog.events import FileSystemEventHandler
 
 class EventManager(FileSystemEventHandler):
     def on_created(self, event):
-        if not event.is_directory:
-            print(f"File created: {event.src_path}")
-            if event.src_path.endswith('.h'):
-                self.move_file(event.src_path, "Game/include/")
-            elif event.src_path.endswith('.cpp'):
-                self.move_file(event.src_path, "Game/src/")
-            else:
-                print(f"Ignoring file: {event.src_path}")
+        if event.is_directory:
+            return
+        file_path = event.src_path
+        print(f"File created: {file_path}")
+
+        module = self.extract_module_from_path(file_path)
+        if not module:
+            print("Cannot determine module, ignoring...")
+            return
+        
+        if file_path.endswith('.h'):
+            destination = f"{module}/include/"
+            self.move_file(file_path, destination)
+        elif event.src_path.endswith('.cpp'):
+            destination = f"{module}/src/"
+            self.move_file(file_path, destination)
     def move_file(self,source,destination):
         time.sleep(3)
         if not os.path.exists(source):
